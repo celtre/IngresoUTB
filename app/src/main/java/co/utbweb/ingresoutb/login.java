@@ -3,6 +3,8 @@ package co.utbweb.ingresoutb;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
@@ -30,6 +32,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
@@ -52,6 +55,8 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+
+import static android.Manifest.permission.INTERNET;
 import static android.Manifest.permission.READ_CONTACTS;
 
 /**
@@ -210,11 +215,13 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
             // form field with an error.
             focusView.requestFocus();
         } else{
-            AsyncHttpTask a =  new AsyncHttpTask();
-            a.execute("http://23.253.34.120", email, password);
-            while (a.getStatus() != AsyncTask.Status.FINISHED);
-            showProgress(true);
-            setContentView(R.layout.actitivy_ingreso);
+
+
+            AsyncHttpTask a = new AsyncHttpTask();
+            a.execute("http://raoapi.utbvirtual.edu.co:8082/token", email, password);
+            Log.e("ahsdjahsd", Integer.toString(a.codigo));
+
+
 
 
 
@@ -222,10 +229,9 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
             mAuthTask.execute((Void) null);*/
         }
     }
-
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
-        return email.contains("T000");
+        return email.contains("t000");
     }
 
     private boolean isPasswordValid(String password) {
@@ -420,5 +426,102 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
         }
     }
 
+    public class AsyncHttpTask extends AsyncTask<String, Void, Integer> {
+
+        public int codigo;
+        Context context;
+        @Override
+        protected void onPreExecute() {
+
+        }
+
+        @Override
+        protected Integer doInBackground(String... params) {
+            URL url;
+            HttpURLConnection connection = null;
+            try {
+                //Create connection
+                String urlParameters = "username=" + URLEncoder.encode(params[1], "UTF-8") +
+                        "&password=" + URLEncoder.encode(params[2], "UTF-8");
+
+                url = new URL(params[0]);
+                connection = (HttpURLConnection)url.openConnection();
+                connection.setRequestMethod("POST");
+
+                connection.setRequestProperty("Content-Length", "" + Integer.toString(urlParameters.getBytes().length));
+                connection.setRequestProperty("Content-Language", "en-US");
+
+                connection.setUseCaches(false);
+                connection.setDoInput(true);
+                connection.setDoOutput(true);
+
+                PrintWriter out = new PrintWriter(connection.getOutputStream());
+                out.print(urlParameters);
+                out.close();
+
+                //Leer la respuesta del servidor
+                try {
+                    BufferedReader br = new BufferedReader(new InputStreamReader((connection.getInputStream())));
+                    StringBuilder sb = new StringBuilder();
+                    String output;
+                    while ((output = br.readLine()) != null) {
+                        sb.append(output);
+                    }
+
+
+                    Log.e("Respuesta",sb.toString());
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+
+                //return response.toString();
+                this.codigo = connection.getResponseCode();
+                Log.e("Respuesta", "ID = "+connection.getResponseCode());
+
+
+
+                return 1;
+
+            } catch (Exception e) {
+                Log.e("onExecute", "Error de app");
+                codigo = -1;
+                e.printStackTrace();
+                return null;
+
+            } finally {
+
+                if(connection != null) {
+                    connection.disconnect();
+                }
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Integer result) {
+            if (codigo == 200) {
+                Log.e("onPostExecute", "on PostExec");
+
+                SharedPreferences settings = getSharedPreferences("TokenStorage", 0);
+                Log.e("onPostExecute", "TokenSaved:" + settings.getString("token", ""));
+                Log.e("onPostExecute", "IdSaved:" + settings.getString("id", ""));
+
+                Intent intent_name = new Intent();
+                intent_name.setClass(getApplicationContext(), IngresoActivity.class);
+                startActivity(intent_name);
+            }else {
+                switch (codigo){
+                    case (401):
+                        Toast.makeText(login.this, "Error de autenticacion", Toast.LENGTH_SHORT).show();
+                        break;
+                    case (-1):
+                        Toast.makeText(login.this, "Error de conexion", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+        }
+    }
+
 }
+
+
 
