@@ -11,6 +11,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.app.LoaderManager.LoaderCallbacks;
+import android.preference.PreferenceManager;
 
 import android.content.CursorLoader;
 import android.content.Loader;
@@ -20,6 +21,7 @@ import android.os.AsyncTask;
 
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.util.Log;
@@ -95,6 +97,14 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (getDefaults("TokenGuardado",getApplicationContext())!=""){
+            Intent login_inmediato = new Intent();
+            login_inmediato.setClass(getApplicationContext(), IngresoActivity.class);
+            login_inmediato.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            login_inmediato.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            login_inmediato.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            startActivity(login_inmediato);
+        }
         setContentView(R.layout.activity_login);
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
@@ -126,6 +136,19 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
+
+    private void setDefaults(String jorge, String estas, Context pepo) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(pepo);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(jorge, estas);
+        editor.commit();
+    }
+
+    public static String getDefaults(String jorge, Context pepo) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(pepo);
+        return preferences.getString(jorge, null);
+    }
+
 
     private void populateAutoComplete() {
         if (!mayRequestContacts()) {
@@ -231,12 +254,12 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
     }
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
-        return email.contains("t000");
+        return email.contains("t000")||email.contains("T000");
     }
 
     private boolean isPasswordValid(String password) {
         //TODO: Replace this with your own logic
-        return password.length() > 4;
+        return password.length() == 6;
     }
 
     /**
@@ -464,12 +487,14 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
                     BufferedReader br = new BufferedReader(new InputStreamReader((connection.getInputStream())));
                     StringBuilder sb = new StringBuilder();
                     String output;
-                    while ((output = br.readLine()) != null) {
+                    while ((output = br.readLine()) != null)
                         sb.append(output);
-                    }
 
-
-                    Log.e("Respuesta",sb.toString());
+                    JSONObject jsonObject = new JSONObject(sb.toString());
+                    String  token = jsonObject.getString("token");
+                    System.out.print("Token Guardado: " + token);
+                    setDefaults("TokenGuardado",token,getApplicationContext());
+                    Log.e("Respuesta", sb.toString());
                 } catch (Exception e){
                     e.printStackTrace();
                 }
@@ -507,6 +532,9 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
 
                 Intent intent_name = new Intent();
                 intent_name.setClass(getApplicationContext(), IngresoActivity.class);
+                intent_name.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent_name.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                intent_name.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(intent_name);
             }else {
                 switch (codigo){
@@ -520,7 +548,6 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
 
         }
     }
-
 }
 
 
