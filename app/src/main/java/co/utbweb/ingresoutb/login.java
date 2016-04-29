@@ -77,6 +77,7 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+    private String code;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -86,44 +87,45 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getDefaults("TokenGuardado",getApplicationContext())!=""){
+        if (getDefaults("TokenGuardado", getApplicationContext()) != "") {
             Intent login_inmediato = new Intent();
             login_inmediato.setClass(getApplicationContext(), IngresoActivity.class);
             login_inmediato.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             login_inmediato.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
             login_inmediato.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
             startActivity(login_inmediato);
-        }
-        setContentView(R.layout.activity_login);
-        // Set up the login form.
-        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
-        populateAutoComplete();
+        } else {
+            setContentView(R.layout.activity_login);
+            // Set up the login form.
+            mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+            populateAutoComplete();
 
-        mPasswordView = (EditText) findViewById(R.id.password);
-        mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                if (id == R.id.login || id == EditorInfo.IME_NULL) {
-                    attemptLogin();
-                    return true;
+            mPasswordView = (EditText) findViewById(R.id.password);
+            mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
+                    if (id == R.id.login || id == EditorInfo.IME_NULL) {
+                        attemptLogin();
+                        return true;
+                    }
+                    return false;
                 }
-                return false;
-            }
-        });
+            });
 
-        Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
-        mEmailSignInButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                attemptLogin();
-            }
-        });
+            Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+            mEmailSignInButton.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    attemptLogin();
+                }
+            });
 
-        mLoginFormView = findViewById(R.id.login_form);
-        mProgressView = findViewById(R.id.login_progress);
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+            mLoginFormView = findViewById(R.id.login_form);
+            mProgressView = findViewById(R.id.login_progress);
+            // ATTENTION: This was auto-generated to implement the App Indexing API.
+            // See https://g.co/AppIndexing/AndroidStudio for more information.
+            client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+        }
     }
 
     private void setDefaults(String jorge, String estas, Context pepo) {
@@ -198,7 +200,7 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
-        String email = mEmailView.getText().toString();
+        code = mEmailView.getText().toString();
         String password = mPasswordView.getText().toString();
 
         boolean cancel = false;
@@ -212,11 +214,11 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
         }
 
         // Check for a valid email address.
-        if (TextUtils.isEmpty(email)) {
+        if (TextUtils.isEmpty(code)) {
             mEmailView.setError(getString(R.string.error_field_required));
             focusView = mEmailView;
             cancel = true;
-        } else if (!isEmailValid(email)) {
+        } else if (!isEmailValid(code)) {
             mEmailView.setError(getString(R.string.error_invalid_email));
             focusView = mEmailView;
             cancel = true;
@@ -230,7 +232,7 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
 
 
             AsyncHttpTask a = new AsyncHttpTask();
-            a.execute("http://raoapi.utbvirtual.edu.co:8082/token", email, password);
+            a.execute("http://raoapi.utbvirtual.edu.co:8082/token", code, password);
             Log.e("ahsdjahsd", Integer.toString(a.codigo));
 
 
@@ -482,6 +484,7 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
                     JSONObject jsonObject = new JSONObject(sb.toString());
                     String  token = jsonObject.getString("token");
                     System.out.print("Token Guardado: " + token);
+                    setDefaults("Codigo", code, getApplicationContext());
                     setDefaults("TokenGuardado",token,getApplicationContext());
                     Log.e("Respuesta", sb.toString());
                 } catch (Exception e){

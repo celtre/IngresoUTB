@@ -9,25 +9,26 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="co.utbweb.ingresoutb.IngresoActivity">
 
-    <FrameLayout
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true">
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:weightSum="1">
 
-        <ImageView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/imageView"
-            android:layout_gravity="center"
-            android:src="@drawable/hilter"/>
-    </FrameLayout>
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="0.33">
 
-    <Spinner
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/spinner"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/BarcodeView" />
+        </LinearLayout>
+
+    </LinearLayout>
 </RelativeLayout>
