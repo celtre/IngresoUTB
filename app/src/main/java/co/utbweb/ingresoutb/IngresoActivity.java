@@ -2,13 +2,17 @@ package co.utbweb.ingresoutb;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Gravity;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -41,6 +45,23 @@ public class IngresoActivity extends AppCompatActivity {
         } catch (WriterException e) {
             e.printStackTrace();
         }
+
+        Button logoutB = (Button) findViewById(R.id.BotonLogout);
+        logoutB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent cerrarSesion = new Intent();
+                cerrarSesion.setClass(getApplicationContext(), login.class);
+                cerrarSesion.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                cerrarSesion.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                cerrarSesion.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                setDefaults("Codigo", "", getApplicationContext());
+                setDefaults("TokenGuardado", "", getApplicationContext());
+                setDefaults("Password", "", getApplicationContext());
+                startActivity(cerrarSesion);
+            }
+        });
+
 
     }
 
@@ -110,7 +131,13 @@ public class IngresoActivity extends AppCompatActivity {
             }, 3 * 1000);
 
         }
+    }
 
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        finish();
     }
 
     private void setDefaults(String jorge, String estas, Context pepo) {

@@ -20,7 +20,7 @@
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_gravity="center_horizontal"
             android:layout_weight="0.33">
 
@@ -30,5 +30,22 @@
                 android:id="@+id/BarcodeView" />
         </LinearLayout>
 
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true">
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:text="Cerrar sesión"
+            android:id="@+id/BotonLogout"
+            android:layout_gravity="bottom"
+            style="?android:textAppearanceSmall" />
     </LinearLayout>
 </RelativeLayout>

@@ -48,7 +48,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.Manifest.permission.READ_CONTACTS;
+//import static android.Manifest.permission.READ_CONTACTS;
 
 /**
  * A login screen that offers login via email/password.
@@ -77,7 +77,7 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
-    private String code;
+    private String code,pass,tokenTemp;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -87,18 +87,17 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getDefaults("TokenGuardado", getApplicationContext()) != "") {
-            Intent login_inmediato = new Intent();
-            login_inmediato.setClass(getApplicationContext(), IngresoActivity.class);
-            login_inmediato.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            login_inmediato.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            login_inmediato.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-            startActivity(login_inmediato);
-        } else {
+        tokenTemp=getDefaults("TokenGuardado", getApplicationContext());
+        if (tokenTemp != "") {
+            code=getDefaults("Codigo",getApplicationContext());
+            pass=getDefaults("Password",getApplicationContext());
+            AsyncHttpTask a = new AsyncHttpTask();
+            a.execute("http://raoapi.utbvirtual.edu.co:8082/token", code, pass);
+            Log.e("quelocura", Integer.toString(a.codigo));
+        }
             setContentView(R.layout.activity_login);
             // Set up the login form.
             mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
-            populateAutoComplete();
 
             mPasswordView = (EditText) findViewById(R.id.password);
             mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -125,7 +124,6 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
             // ATTENTION: This was auto-generated to implement the App Indexing API.
             // See https://g.co/AppIndexing/AndroidStudio for more information.
             client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
-        }
     }
 
     private void setDefaults(String jorge, String estas, Context pepo) {
@@ -141,35 +139,6 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
     }
 
 
-    private void populateAutoComplete() {
-        if (!mayRequestContacts()) {
-            return;
-        }
-
-        getLoaderManager().initLoader(0, null, this);
-    }
-
-    private boolean mayRequestContacts() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return true;
-        }
-        if (checkSelfPermission(READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-            return true;
-        }
-        if (shouldShowRequestPermissionRationale(READ_CONTACTS)) {
-            Snackbar.make(mEmailView, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
-                    .setAction(android.R.string.ok, new OnClickListener() {
-                        @Override
-                        @TargetApi(Build.VERSION_CODES.M)
-                        public void onClick(View v) {
-                            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
-                        }
-                    });
-        } else {
-            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
-        }
-        return false;
-    }
 
     /**
      * Callback received when a permissions request has been completed.
@@ -177,11 +146,6 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_READ_CONTACTS) {
-            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                populateAutoComplete();
-            }
-        }
     }
 
 
@@ -201,13 +165,13 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
 
         // Store values at the time of the login attempt.
         code = mEmailView.getText().toString();
-        String password = mPasswordView.getText().toString();
+        pass = mPasswordView.getText().toString();
 
         boolean cancel = false;
         View focusView = null;
 
         // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
+        if (!TextUtils.isEmpty(pass) && !isPasswordValid(pass)) {
             mPasswordView.setError(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
             cancel = true;
@@ -232,7 +196,7 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
 
 
             AsyncHttpTask a = new AsyncHttpTask();
-            a.execute("http://raoapi.utbvirtual.edu.co:8082/token", code, password);
+            a.execute("http://raoapi.utbvirtual.edu.co:8082/token", code, pass);
             Log.e("ahsdjahsd", Integer.toString(a.codigo));
 
 
@@ -485,6 +449,7 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
                     String  token = jsonObject.getString("token");
                     System.out.print("Token Guardado: " + token);
                     setDefaults("Codigo", code, getApplicationContext());
+                    setDefaults("Password", pass, getApplicationContext());
                     setDefaults("TokenGuardado",token,getApplicationContext());
                     Log.e("Respuesta", sb.toString());
                 } catch (Exception e){
@@ -522,11 +487,18 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
                 Log.e("onPostExecute", "TokenSaved:" + settings.getString("token", ""));
                 Log.e("onPostExecute", "IdSaved:" + settings.getString("id", ""));
 
-                Intent intent_name = new Intent();
+                Intent intent_name = new Intent(),deVuelta=new Intent();
                 intent_name.setClass(getApplicationContext(), IngresoActivity.class);
+                deVuelta.setClass(getApplicationContext(),login.class);
                 intent_name.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent_name.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 intent_name.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                if(tokenTemp!=""){
+                    if(tokenTemp==getDefaults("TokenGuardado", getApplicationContext())){
+                        startActivity(intent_name);
+                    }else
+                        startActivity(deVuelta);
+                }
                 startActivity(intent_name);
             }else {
                 switch (codigo){
