@@ -87,14 +87,6 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        tokenTemp=getDefaults("TokenGuardado", getApplicationContext());
-        if (tokenTemp != "") {
-            code=getDefaults("Codigo",getApplicationContext());
-            pass=getDefaults("Password",getApplicationContext());
-            AsyncHttpTask a = new AsyncHttpTask();
-            a.execute("http://raoapi.utbvirtual.edu.co:8082/token", code, pass);
-            Log.e("quelocura", Integer.toString(a.codigo));
-        }
             setContentView(R.layout.activity_login);
             // Set up the login form.
             mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
