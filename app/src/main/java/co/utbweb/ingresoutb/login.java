@@ -33,10 +33,18 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -46,7 +54,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static android.widget.Toast.LENGTH_SHORT;
 
 //import static android.Manifest.permission.READ_CONTACTS;
 
@@ -77,7 +89,7 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
-    private String code,pass,tokenTemp;
+    private String code, pass, tokenTemp;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -87,35 +99,35 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-            setContentView(R.layout.activity_login);
-            // Set up the login form.
-            mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+        setContentView(R.layout.activity_login);
+        // Set up the login form.
+        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
 
-            mPasswordView = (EditText) findViewById(R.id.password);
-            mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-                @Override
-                public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                    if (id == R.id.login || id == EditorInfo.IME_NULL) {
-                        attemptLogin();
-                        return true;
-                    }
-                    return false;
-                }
-            });
-
-            Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
-            mEmailSignInButton.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View view) {
+        mPasswordView = (EditText) findViewById(R.id.password);
+        mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
+                if (id == R.id.login || id == EditorInfo.IME_NULL) {
                     attemptLogin();
+                    return true;
                 }
-            });
+                return false;
+            }
+        });
 
-            mLoginFormView = findViewById(R.id.login_form);
-            mProgressView = findViewById(R.id.login_progress);
-            // ATTENTION: This was auto-generated to implement the App Indexing API.
-            // See https://g.co/AppIndexing/AndroidStudio for more information.
-            client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+        Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+        mEmailSignInButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                attemptLogin();
+            }
+        });
+
+        mLoginFormView = findViewById(R.id.login_form);
+        mProgressView = findViewById(R.id.login_progress);
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     private void setDefaults(String jorge, String estas, Context pepo) {
@@ -129,7 +141,6 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(pepo);
         return preferences.getString(jorge, null);
     }
-
 
 
     /**
@@ -184,13 +195,66 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
             // There was an error; don't attempt login and focus the first
             // form field with an error.
             focusView.requestFocus();
-        } else{
+        } else {
+            RequestQueue queue = Volley.newRequestQueue(this);
+            StringRequest postRequest = new StringRequest(Request.Method.POST, "http://raoapi.utbvirtual.edu.co:8082/token",
+                    new Response.Listener<String>()
+                    {
+                        @Override
+                        public void onResponse(String response) {
+                            Intent intent_name = new Intent();
+                            intent_name.setClass(getApplicationContext(), IngresoActivity.class);
+                            intent_name.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            intent_name.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            intent_name.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                            try {
+                                JSONObject json = new JSONObject(response);
+                                String token = json.getString("token");
+                                setDefaults("TokenGuardado",token,getApplicationContext());
+                                setDefaults("Codigo",code,getApplicationContext());
+                                setDefaults("Password",pass,getApplicationContext());
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                            Log.d("Response", response);
+                            startActivity(intent_name);
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Intent deVuelta = new Intent();
+                            deVuelta.setClass(getApplicationContext(), login.class);
+                            deVuelta.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            deVuelta.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            deVuelta.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                            if (error instanceof AuthFailureError) {
+                                Toast.makeText(login.this, "Error de autenticacion", LENGTH_SHORT).show();
+                            }else {
+                                Toast.makeText(login.this, "Error de conexion", LENGTH_SHORT).show();
+                            }
+                            startActivity(deVuelta);
+                        }
+                    }
+            ) {
+                @Override
+                protected Map<String, String> getParams() {
+                    Map<String, String> params = new HashMap<String, String>();
+                    params.put("username", code);
+                    params.put("password", pass);
 
+                    return params;
+                }
 
-            AsyncHttpTask a = new AsyncHttpTask();
-            a.execute("http://raoapi.utbvirtual.edu.co:8082/token", code, pass);
-            Log.e("ahsdjahsd", Integer.toString(a.codigo));
-
+                @Override
+                public Map<String, String> getHeaders() throws AuthFailureError {
+                    Map<String,String> params = new HashMap<String, String>();
+                    params.put("Content-Type","application/x-www-form-urlencoded");
+                    return params;
+                }
+            };
+            queue.add(postRequest);
+        }
 
 
 
@@ -198,10 +262,10 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
             /*mAuthTask = new UserLoginTask(email, password);
             mAuthTask.execute((Void) null);*/
         }
-    }
+
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
-        return email.contains("t000")||email.contains("T000");
+        return email.contains("t000") || email.contains("T000");
     }
 
     private boolean isPasswordValid(String password) {
@@ -393,115 +457,6 @@ public class login extends AppCompatActivity implements LoaderCallbacks<Cursor> 
         protected void onCancelled() {
             mAuthTask = null;
             showProgress(false);
-        }
-    }
-
-    public class AsyncHttpTask extends AsyncTask<String, Void, Integer> {
-
-        public int codigo;
-        Context context;
-        @Override
-        protected void onPreExecute() {
-
-        }
-
-        @Override
-        protected Integer doInBackground(String... params) {
-            URL url;
-            HttpURLConnection connection = null;
-            try {
-                //Create connection
-                String urlParameters = "username=" + URLEncoder.encode(params[1], "UTF-8") +
-                        "&password=" + URLEncoder.encode(params[2], "UTF-8");
-
-                url = new URL(params[0]);
-                connection = (HttpURLConnection)url.openConnection();
-                connection.setRequestMethod("POST");
-
-                connection.setRequestProperty("Content-Length", "" + Integer.toString(urlParameters.getBytes().length));
-                connection.setRequestProperty("Content-Language", "en-US");
-
-                connection.setUseCaches(false);
-                connection.setDoInput(true);
-                connection.setDoOutput(true);
-
-                PrintWriter out = new PrintWriter(connection.getOutputStream());
-                out.print(urlParameters);
-                out.close();
-
-                //Leer la respuesta del servidor
-                try {
-                    BufferedReader br = new BufferedReader(new InputStreamReader((connection.getInputStream())));
-                    StringBuilder sb = new StringBuilder();
-                    String output;
-                    while ((output = br.readLine()) != null)
-                        sb.append(output);
-
-                    JSONObject jsonObject = new JSONObject(sb.toString());
-                    String  token = jsonObject.getString("token");
-                    System.out.print("Token Guardado: " + token);
-                    setDefaults("Codigo", code, getApplicationContext());
-                    setDefaults("Password", pass, getApplicationContext());
-                    setDefaults("TokenGuardado",token,getApplicationContext());
-                    Log.e("Respuesta", sb.toString());
-                } catch (Exception e){
-                    e.printStackTrace();
-                }
-
-                //return response.toString();
-                this.codigo = connection.getResponseCode();
-                Log.e("Respuesta", "ID = "+connection.getResponseCode());
-
-
-
-                return 1;
-
-            } catch (Exception e) {
-                Log.e("onExecute", "Error de app");
-                codigo = -1;
-                e.printStackTrace();
-                return null;
-
-            } finally {
-
-                if(connection != null) {
-                    connection.disconnect();
-                }
-            }
-        }
-
-        @Override
-        protected void onPostExecute(Integer result) {
-            if (codigo == 200) {
-                Log.e("onPostExecute", "on PostExec");
-
-                SharedPreferences settings = getSharedPreferences("TokenStorage", 0);
-                Log.e("onPostExecute", "TokenSaved:" + settings.getString("token", ""));
-                Log.e("onPostExecute", "IdSaved:" + settings.getString("id", ""));
-
-                Intent intent_name = new Intent(),deVuelta=new Intent();
-                intent_name.setClass(getApplicationContext(), IngresoActivity.class);
-                deVuelta.setClass(getApplicationContext(),login.class);
-                intent_name.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent_name.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                intent_name.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                if(tokenTemp!=""){
-                    if(tokenTemp==getDefaults("TokenGuardado", getApplicationContext())){
-                        startActivity(intent_name);
-                    }else
-                        startActivity(deVuelta);
-                }
-                startActivity(intent_name);
-            }else {
-                switch (codigo){
-                    case (401):
-                        Toast.makeText(login.this, "Error de autenticacion", Toast.LENGTH_SHORT).show();
-                        break;
-                    case (-1):
-                        Toast.makeText(login.this, "Error de conexion", Toast.LENGTH_SHORT).show();
-                }
-            }
-
         }
     }
 }

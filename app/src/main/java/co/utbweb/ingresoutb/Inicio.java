@@ -50,11 +50,6 @@ public class Inicio extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
-        final Intent intent_name = new Intent(), deVuelta = new Intent();
-        intent_name.setClass(getApplicationContext(), IngresoActivity.class);
-        intent_name.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent_name.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        intent_name.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         RequestQueue queue = Volley.newRequestQueue(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inicio);
@@ -62,29 +57,41 @@ public class Inicio extends AppCompatActivity {
         if (tokenTemp != "") {
             code = getDefaults("Codigo", getApplicationContext());
             pass = getDefaults("Password", getApplicationContext());
-            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.GET, "http://raoapi.utbvirtual.edu.co:8082/token",
-                    new Response.Listener<JSONObject>() {
+            StringRequest postRequest = new StringRequest(Request.Method.POST, "http://raoapi.utbvirtual.edu.co:8082/token",
+                    new Response.Listener<String>()
+                    {
                         @Override
-                        public void onResponse(JSONObject response) {
-                            // response
+                        public void onResponse(String response) {
+                            Intent intent_name = new Intent();
+                            intent_name.setClass(getApplicationContext(), IngresoActivity.class);
+                            intent_name.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            intent_name.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            intent_name.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                             try {
-                                Log.d("Response", response.getString("token"));
+                                JSONObject json = new JSONObject(response);
+                                String token = json.getString("token");
+                                setDefaults("TokenGuardado",token,getApplicationContext());
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
+                            Log.d("Response", response);
                             startActivity(intent_name);
                         }
-
                     },
                     new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
+                            Intent deVuelta = new Intent();
+                            deVuelta.setClass(getApplicationContext(), login.class);
+                            deVuelta.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            deVuelta.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            deVuelta.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                             if (error instanceof AuthFailureError) {
                                 Toast.makeText(Inicio.this, "Error de autenticacion", LENGTH_SHORT).show();
-                                startActivity(deVuelta);
-                            }else
-                                setContentView(R.layout.activity_inicio);
+                            }else {
                                 Toast.makeText(Inicio.this, "Error de conexion", LENGTH_SHORT).show();
+                            }
+                            startActivity(deVuelta);
                         }
                     }
             ) {
@@ -96,9 +103,25 @@ public class Inicio extends AppCompatActivity {
 
                     return params;
                 }
+
+                @Override
+                public Map<String, String> getHeaders() throws AuthFailureError {
+                    Map<String,String> params = new HashMap<String, String>();
+                    params.put("Content-Type","application/x-www-form-urlencoded");
+                    return params;
+                }
             };
             queue.add(postRequest);
         }
+        else{
+            Intent deVuelta = new Intent();
+            deVuelta.setClass(getApplicationContext(), login.class);
+            deVuelta.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            deVuelta.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            deVuelta.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            startActivity(deVuelta);
+        }
+
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
