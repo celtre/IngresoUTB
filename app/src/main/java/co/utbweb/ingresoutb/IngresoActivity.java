@@ -18,13 +18,24 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.Response.Listener;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
+import org.json.JSONObject;
+
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 
 public class IngresoActivity extends AppCompatActivity {
@@ -33,7 +44,7 @@ public class IngresoActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ingreso);
-        String barcode_data = getDefaults("Codigo",getApplicationContext());
+        String barcode_data = getDefaults("Codigo", getApplicationContext());
         Bitmap bitmap;
         ImageView iv = (ImageView) findViewById(R.id.BarcodeView);
 
@@ -61,9 +72,39 @@ public class IngresoActivity extends AppCompatActivity {
                 startActivity(cerrarSesion);
             }
         });
+        RequestQueue queue = Volley.newRequestQueue(this);
+        StringRequest getRequest = new StringRequest(Request.Method.GET,"http://172.16.9.79/ingresoUTB/registro",
+                new Response.Listener<String>(){
+                    @Override
+                    public void onResponse(String response) {
+                        // display response
+                        TextView imprime = (TextView) findViewById(R.id.json);
+                        imprime.setText(response);
+                        Log.d("Response", response);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        String lala = "a";
+                        Log.d("Response", lala);
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("codigo", getDefaults("Codigo", getApplicationContext()));
 
+                return params;
+            }
 
-    }
+        };
+
+// add it to the RequestQueue
+            queue.add(getRequest);
+
+        }
 
     private static final int WHITE = 0xFFFFFFFF;
     private static final int BLACK = 0xFF000000;

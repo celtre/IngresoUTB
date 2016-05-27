@@ -32,7 +32,7 @@
 
     </LinearLayout>
 
-    <LinearLayout
+    <RelativeLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -45,7 +45,28 @@
             android:layout_height="58dp"
             android:text="Cerrar sesión"
             android:id="@+id/BotonLogout"
-            android:layout_gravity="bottom"
-            style="?android:textAppearanceSmall" />
-    </LinearLayout>
+            android:layout_gravity="center_vertical"
+            style="?android:textAppearanceSmall"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="0dp"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="421dp" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="61dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="257dp"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:id="@+id/json"
+                android:layout_gravity="bottom" />
+        </LinearLayout>
+
+    </RelativeLayout>
 </RelativeLayout>
